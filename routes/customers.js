@@ -1,33 +1,10 @@
 const express = require("express");
-// const Joi = require("joi");
 const router = express.Router();
-const mongoose = require("mongoose");
+const { Customer, validate } = require("../models/customers");
 
 //Run mongod in terminal
 //THEN CLOSE TERMINAL!!
 //Then run index.js
-
-const Customer = mongoose.model(
-  "Customer",
-  new mongoose.Schema({
-    isGold: {
-      type: Boolean,
-      required: true
-    },
-    name: {
-      type: String,
-      required: true,
-      minlength: 2,
-      maxlength: 50
-    },
-    phone: {
-      type: String,
-      required: true,
-      minlength: 5,
-      maxlength: 15
-    }
-  })
-);
 
 //get all customers
 router.get("/", async (req, res) => {
@@ -37,6 +14,9 @@ router.get("/", async (req, res) => {
 
 //create new customer
 router.post("/", async (req, res) => {
+  const { error } = validate(req.body);
+  if (error) return res.status(400).send(error.details[0].message);
+
   let customer = new Customer({
     isGold: req.body.isGold,
     name: req.body.name,
@@ -48,11 +28,16 @@ router.post("/", async (req, res) => {
 
 //edit customer
 router.put(":/id", async (req, res) => {
+  const { error } = validate(req.body);
+  if (error) return res.status(400).send(error.details[0].message);
+
   const customer = await Customer.findByIdAndUpdate(
     req.params.id,
-    { isGold: req.body.isGold },
-    { name: req.body.name },
-    { phone: req.body.phone },
+    {
+      isGold: req.body.isGold,
+      name: req.body.name,
+      phone: req.body.phone
+    },
     { new: true }
   );
 
